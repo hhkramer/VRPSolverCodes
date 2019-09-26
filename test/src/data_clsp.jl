@@ -192,6 +192,32 @@ function build_G(inst::DataClsp, i::Int)
     return G
 end
 
+# return entering arcs in vertex v
+function entering_arcs(G::InputGraph, v::Vertex)
+    E = Arc[]
+
+    for a in G.A
+        if a.destination == v
+            push!(E, a)
+        end
+    end
+
+    return E
+end
+
+# return arcs leaving from vertex v
+function leaving_arcs(G::InputGraph, v::Vertex)
+    E = Arc[]
+
+    for a in G.A
+        if a.origin == v
+            push!(E, a)
+        end
+    end
+
+    return E
+end
+
 
 function show(io::IO, inst::DataClsp)
    # Print instance data

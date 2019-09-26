@@ -1,8 +1,10 @@
 # using VrpSolver, JuMP
+using JuMP, Gurobi
 
 include("data_clsp.jl")
 # include("model_clsp.jl")
 # include("param_clsp.jl")
+include("model.jl")
 
 appfolder = dirname(@__FILE__)
 
@@ -39,6 +41,8 @@ for i in 1:data.numItems
    push!(G, g)
    println(sizeof(G))
 end
+
+model = build_WagnerWhitin_model(data, G)
 
 
 # (model, x) = build_model(data)
