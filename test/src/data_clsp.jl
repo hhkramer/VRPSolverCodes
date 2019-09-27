@@ -154,7 +154,6 @@ function build_WagnerWhitin_V(inst::DataClsp, i::Int)
 end
 
 function build_S(inst::DataClsp, i::Int)
-    
     S = Array{Int}(undef, sum_demands(inst, i, 1, inst.numPer), inst.numPer + 1)
 
     fill!(S, -1)
