@@ -10,7 +10,7 @@ appfolder = dirname(@__FILE__)
 
 # if length(ARGS) == 0
    #  cutoff = 12o44
-    inputfile = "$appfolder/../data/testSmall"
+    inputfile = "$appfolder/../data/X11119A"#testSmall"
 # else
 #     inputfile = ARGS[1] #reading the first parameter passed through command line
 #     if (length(ARGS) == 1)

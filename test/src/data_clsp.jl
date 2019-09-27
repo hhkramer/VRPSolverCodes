@@ -31,7 +31,7 @@ struct Arc
     destination::Vertex         # destination vertex
     prod_qtd::Int64             # production amount of arc
     res_consumption::Int64      # resource consumption of arc
-    cost::Int64                 # cost of arc
+    cost::Float64               # cost of arc
 end
 
 struct InputGraph
