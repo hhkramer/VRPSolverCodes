@@ -27,7 +27,7 @@ end
 struct Arc
     arc_id::Int64
     i::Int64                    # item
-    origin::Vertex              # origin vertx
+    origin::Vertex              # origin vertex
     destination::Vertex         # destination vertex
     prod_qtd::Int64             # production amount of arc
     res_consumption::Int64      # resource consumption of arc
@@ -117,7 +117,7 @@ function sum_demands(inst::DataClsp, i::Int,  t::Int, tt::Int)
 end
 
 # Build set S for item i
-function build_S(inst::DataClsp, i::Int)
+function build_WagnerWhitin_S(inst::DataClsp, i::Int)
     S = Array{Int}(undef, inst.numPer, inst.numPer + 1)
 
     fill!(S, -1)
@@ -136,6 +136,43 @@ function build_S(inst::DataClsp, i::Int)
 end
 
 # Build set of vertices for item i
+function build_WagnerWhitin_V(inst::DataClsp, i::Int)
+    S = build_WagnerWhitin_S(inst, i)
+    V = Vertex[]
+    id = 1
+    for period in 1:inst.numPer + 1
+        for inv_level in 1:inst.numPer
+            if S[inv_level, period] != -1
+                v = Vertex(id, i, inv_level, period, S[inv_level, period])
+                push!(V, v)
+                id += 1
+            end
+        end
+    end
+
+    return V
+end
+
+function build_S(inst::DataClsp, i::Int)
+    
+    S = Array{Int}(undef, sum_demands(inst, i, 1, inst.numPer), inst.numPer + 1)
+
+    fill!(S, -1)
+    for period in 1:inst.numPer + 1
+        S[1, period] = 0
+    end
+
+    for period in 2:inst.numPer
+        max_inv_level = min(floor((inst.cap - inst.st[i]) / inst.pt[i]), sum_demands(inst, i, 1, inst.numPer))
+        for inv_level in 2:Int(max_inv_level)
+            S[inv_level, period] = inv_level - 1
+        end
+    end
+
+    return S
+end
+
+# Build set of vertices for item i
 function build_V(inst::DataClsp, i::Int)
     S = build_S(inst, i)
     V = Vertex[]
@@ -147,6 +184,17 @@ function build_V(inst::DataClsp, i::Int)
                 push!(V, v)
                 id += 1
             end
+        end
+    end
+
+    return V
+end
+
+function build_VV(inst::DataClsp, G::InputGraph)
+    V = Int[]
+    for v in G.V
+        if v.t >= 2 && v.t <= inst.numPer
+            push!(V, v.vertex_id)
         end
     end
 
@@ -194,11 +242,11 @@ end
 
 # return entering arcs in vertex v
 function entering_arcs(G::InputGraph, v::Vertex)
-    E = Arc[]
+    E = Int[]
 
     for a in G.A
         if a.destination == v
-            push!(E, a)
+            push!(E, a.arc_id)
         end
     end
 
@@ -207,11 +255,11 @@ end
 
 # return arcs leaving from vertex v
 function leaving_arcs(G::InputGraph, v::Vertex)
-    E = Arc[]
+    E = Int[]
 
     for a in G.A
         if a.origin == v
-            push!(E, a)
+            push!(E, a.arc_id)
         end
     end
 
