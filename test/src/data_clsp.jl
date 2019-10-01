@@ -113,6 +113,7 @@ function sum_demands(inst::DataClsp, i::Int,  t::Int, tt::Int)
     for period in t:tt
         sum += inst.dem[i, period]
     end
+    
     return sum
 end
 
@@ -154,16 +155,21 @@ function build_WagnerWhitin_V(inst::DataClsp, i::Int)
 end
 
 function build_S(inst::DataClsp, i::Int)
-    S = Array{Int}(undef, sum_demands(inst, i, 1, inst.numPer), inst.numPer + 1)
-
+    #max_inv_level = Int(min(floor((inst.cap - inst.st[i]) / inst.pt[i]) - inst.dem[i, 1], sum_demands(inst, i, 2, inst.numPer)))
+    #max_inv_level -= inst.dem[i, 1]
+    S = Array{Int}(undef, sum_demands(inst, i, 1, inst.numPer) + 1, inst.numPer + 1)# max_inv_level + 1, inst.numPer + 1)#
+    #println("i = $i, number of lines = ", max_inv_level + 1)
     fill!(S, -1)
     for period in 1:inst.numPer + 1
         S[1, period] = 0
     end
 
     for period in 2:inst.numPer
-        max_inv_level = min(floor((inst.cap - inst.st[i]) / inst.pt[i]), sum_demands(inst, i, 1, inst.numPer))
-        for inv_level in 2:Int(max_inv_level)
+        max_inv_level = Int(min(floor((inst.cap - inst.st[i]) / inst.pt[i]) - inst.dem[i, period - 1], sum_demands(inst, i, period, inst.numPer)))
+        #max_inv_level -= inst.dem[i, period-1]
+        println("t = $period, max_inv_level = $max_inv_level")
+        for inv_level in 2:max_inv_level + 1Senhanlog01
+            
             S[inv_level, period] = inv_level - 1
         end
     end
@@ -174,13 +180,18 @@ end
 # Build set of vertices for item i
 function build_V(inst::DataClsp, i::Int)
     S = build_S(inst, i)
+    #Senhanlog01
+    println(S)
     V = Vertex[]
     id = 1
+
+    max_inv_level = Int(min(floor((inst.cap - inst.st[i]) / inst.pt[i]) - inst.dem[i, 1], sum_demands(inst, i, 1, inst.numPer)))
     for period in 1:inst.numPer + 1
-        for inv_level in 1:inst.numPer
+        for inv_level in 1:max_inv_level#1:sum_demands(inst, i, 1, inst.numPer)
             if S[inv_level, period] != -1
                 v = Vertex(id, i, inv_level, period, S[inv_level, period])
                 push!(V, v)
+                #println(v)
                 id += 1
             end
         end
@@ -234,7 +245,7 @@ function build_G(inst::DataClsp, i::Int)
     V = build_V(inst, i)
     A = build_A(inst, i, V)
     G = InputGraph(i, V, A)
-    println("i = $i  G = ", G)
+    #println("i = $i  G = ", G)
 
     return G
 end
@@ -263,6 +274,19 @@ function leaving_arcs(G::InputGraph, v::Vertex)
     end
 
     return E
+end
+
+#return arcs leaving nodes in period t
+function arcs_leaving_period(G::InputGraph, t::Int)
+    A = Int[]
+
+    for a in G.A
+        if a.origin.t == t
+            push!(A,a.arc_id)
+        end
+    end
+
+    return A
 end
 
 
